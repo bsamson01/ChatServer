@@ -1,9 +1,9 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { createServer } = require("http");
-const { Server } = require("socket.io");
 const database = require("./config/database");
-const port = 4000;
+require("dotenv").config();
+const port = process.env.PORT || 4000;
 const cors = require('cors');
 const Message = require('./models/messages');
 const User = require('./models/users');
@@ -14,13 +14,6 @@ const app = express();
 const httpServer = createServer(app);
 
 var WebSocketServer = require('websocket').server;
-
-// const io = new Server(httpServer, {
-//   cors: {
-//     origin: "http://localhost:3000",
-//   },
-// });
-
 
 try {
   mongoose.connect(
