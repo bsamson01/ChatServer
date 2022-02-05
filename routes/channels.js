@@ -1,11 +1,40 @@
-const Channel = require('../models/channels');
-const Message = require('../models/messages');
+const { Channel, Message, User } = require('../models');
 const express = require('express');
 const router = express.Router();
 
 router.post('/', async (req, res) => {
     let channels = await Channel.find({ members: { $in : [req.body.user_id]} });
     res.send(channels);
+});
+
+router.post('/send-message', async (req, res) => {
+    let message = req.body.message;
+
+    if (!message) {
+        return res.status(400).send({
+            message: 'Message is required'
+        });
+    }
+
+    let user = await User.findOne({ _id: message.senderId });
+
+    if (!user) {
+        return res.status(400).send({
+            message: 'User is not found'
+        });
+    } else {
+        let newMessage = new Message({
+            senderId: message.senderId,
+            senderName: message.senderName,
+            channelId: message.channelId,
+            message: message.message,
+            createdAt: Date.now()
+        });
+
+        newMessage.save().then(() => {
+            res.send(newMessage);
+        });
+    }
 });
 
 router.post('/create', async (req, res) => {

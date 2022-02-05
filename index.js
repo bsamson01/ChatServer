@@ -1,19 +1,16 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { createServer } = require("http");
-const database = require("./config/database");
-require("dotenv").config();
-const port = process.env.PORT || 4000;
 const cors = require('cors');
-const Message = require('./models/messages');
-const User = require('./models/users');
+require("dotenv").config();
+
+const database = require("./config/database");
 const userAuth = require('./routes/users');
 const chats = require('./routes/channels');
 
 const app = express();
 const httpServer = createServer(app);
-
-var WebSocketServer = require('websocket').server;
+const port = process.env.PORT || 4000;
 
 try {
   mongoose.connect(
@@ -27,60 +24,15 @@ try {
 
 app.use(cors());
 app.use(express.json());
-app.use('/user', userAuth);
-app.use('/chats', chats);
+app.use('/api/user', userAuth);
+app.use('/api/chats', chats);
 
-wsServer = new WebSocketServer({
-  httpServer: httpServer,
-  autoAcceptConnections: false,
-  cors: {
-    origin: 'https://localhost:3000',
-  }
+app.get('/api', (req, res) => {
+  res.send('Brandon\'s Chat Web Server Api is online');
 });
 
 app.get('/', (req, res) => {
-  res.send('Server is on');
-});
-
-function originIsAllowed(origin) {
-  return true;
-}
-
-
-wsServer.on('request', function(request) {
-
-  if (!originIsAllowed(request.origin)) {
-    request.reject();
-    console.log("Request origin is not allowed");
-    return;
-  }
-    
-    var connection = request.accept('echo-protocol', request.origin);
-    console.log((new Date()) + ' Connection accepted.');
-    connection.on('message', async (data) => {
-
-      const { message } = JSON.parse(data.utf8Data);
-  
-      let user = await User.findOne({ _id: message.senderId });
-  
-      if (user) {
-        let newMessage = new Message({
-          senderId: message.senderId,
-          senderName: user.name,
-          channelId: message.channelId,
-          message: message.message,
-          createdAt: Date.now()
-        });
-    
-        newMessage.save().then(() =>  {
-          connection.send(JSON.stringify({message: newMessage}));
-        });
-      }
-
-    });
-    connection.on('close', function(reasonCode, description) {
-        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
-    });
+  res.redirect('/api');
 });
 
 httpServer.listen(port, () => {
