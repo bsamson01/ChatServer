@@ -45,6 +45,10 @@ wsServer = new WebSocketServer({
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('Server is on');
+});
+
 function originIsAllowed(origin) {
   return true;
 }
